@@ -1,0 +1,7 @@
+[package]
+name = "vmm-providers"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+lib-vmm = { git = "https://github.com/void-mod-manager/lib-vmm" }
