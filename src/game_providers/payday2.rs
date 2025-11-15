@@ -13,8 +13,7 @@ pub trait InstallResultExt<T> {
 impl<T, E: std::error::Error> InstallResultExt<T> for Result<T, E> {
     fn ctx(self, op: &'static str) -> Result<T, GameInstallError> {
         self.map_err(|e| {
-            GameInstallError::IO(Error::new(
-                ErrorKind::Other,
+            GameInstallError::IO(Error::other(
                 format!("{op} failed: {e}")
             ))
         })
@@ -80,7 +79,7 @@ impl GameProvider for Payday2Provider {
         ensure_dir(&mod_asset_folder).ctx("ensure overrides dir")?;
 
         // Archive stuff
-        let info = inspect_zip(&target).ctx("inspect zip")?;
+        let info = inspect_zip(target).ctx("inspect zip")?;
         let inspected_root = info.single_top_level_dir();
 
         let raw_name_os = inspected_root

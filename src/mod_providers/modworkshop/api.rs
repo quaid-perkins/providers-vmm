@@ -17,7 +17,7 @@ impl ModWorkShopProvider {
     fn build_url(&self, query: &DiscoveryQuery) -> Result<Url, DiscoveryError> {
         let game = self.api.context()
             .get_game_provider(&query.game_id)
-            .map_err(|e| DiscoveryError::InvalidQuery(format!("ID {} not loaded", query.game_id)))?;
+            .map_err(|_e| DiscoveryError::InvalidQuery(format!("ID {} not loaded", query.game_id)))?;
 
         let game_id = game.get_external_id();
 
@@ -50,7 +50,7 @@ impl ModWorkShopProvider {
 #[async_trait::async_trait]
 impl ModProvider for ModWorkShopProvider {
 async fn discover(&self, query: &DiscoveryQuery) -> Result<DiscoveryResult, DiscoveryError> {
-        let target = self.build_url(&query)?;
+        let target = self.build_url(query)?;
         let resp: DiscoverResponse = self
             .http
             .get_typed(target.as_str())
@@ -108,9 +108,9 @@ async fn discover(&self, query: &DiscoveryQuery) -> Result<DiscoveryResult, Disc
                        id: m.id.unwrap_or_default().to_string(),
                        description: m.desc.unwrap_or_else(|| "error".to_owned()),
                        short_description: m.short_desc.unwrap_or_else(|| "error".to_owned()),
-                       downloads: m.downloads.unwrap_or(0),
-                       views: m.views.unwrap_or(0),
-                       likes: m.likes.unwrap_or(0),
+                       downloads: m.downloads.unwrap_or(0).try_into().unwrap_or(0),
+                       views: m.views.unwrap_or(0).try_into().unwrap_or(0),
+                       likes: m.likes.unwrap_or(0).try_into().unwrap_or(0),
                        thumbnail_image: thumb_file,
                        user_name,
                        user_avatar,
@@ -123,10 +123,10 @@ async fn discover(&self, query: &DiscoveryQuery) -> Result<DiscoveryResult, Disc
                 provider_id: self.register(),
                 game_id: query.game_id.clone(),
                 pagination: PaginationMeta {
-                    current: meta.current_page.unwrap_or(1),
-                    page_size: meta.per_page.unwrap_or(50),
-                    total_pages: Some(meta.last_page.unwrap_or(1)),
-                    total_items: Some(meta.total.unwrap_or(0))
+                    current: meta.current_page.unwrap_or(1).try_into().unwrap_or(1),
+                    page_size: meta.per_page.unwrap_or(50).try_into().unwrap_or(50),
+                    total_pages: Some(meta.last_page.unwrap_or(1).try_into().unwrap_or(1)),
+                    total_items: Some(meta.total.unwrap_or(0).try_into().unwrap_or(0))
                 },
                 applied_tags: vec![],
                 available_tags: Some(vec![]),
@@ -147,7 +147,7 @@ async fn discover(&self, query: &DiscoveryQuery) -> Result<DiscoveryResult, Disc
                 return Failed("Download task ended unexpectedly".into());
             }
             match &*rx.borrow() {
-                InProgress(p) => return InProgress(p.clone()),
+                InProgress(p) => return InProgress(*p),
                 Completed(p) => return Completed(p.clone()),
                 Failed(e) => return Failed(e.clone()),
                 Cancelled => return Cancelled,

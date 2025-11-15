@@ -1,6 +1,5 @@
 /// This is a testing ground for a potential StagingGuard, before merged into lib-vmm
 /// This lets us get real usage out of it, before comitting to it.
-
 use std::path::{Path, PathBuf};
 
 pub struct StagingGuard {
